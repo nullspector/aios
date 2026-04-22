@@ -4,9 +4,9 @@
 #  Supports: Ubuntu 20.04/22.04/24.04 LTS  |  Arch Linux
 #
 #  Usage:
-#    curl -fsSL https://raw.githubusercontent.com/yourname/aios/main/install.sh | bash
+#    curl -fsSL https://raw.githubusercontent.com/nullspector/aios/main/install.sh | bash
 #    OR:
-#    git clone https://github.com/yourname/aios && cd aios && ./install.sh
+#    git clone https://github.com/nullspector/aios && cd aios && ./install.sh
 #
 #  Options (env vars):
 #    AIOS_PORT=7860          Dashboard port (default: 7860)
@@ -342,7 +342,7 @@ header "PHASE 3 — Installing AIOS"
 
 # Clone repo if not already present
 if [[ ! -f "${AIOS_REPO_DIR}/backend/app/main.py" ]]; then
-    AIOS_REMOTE="${AIOS_REMOTE:-https://github.com/yourname/aios.git}"
+    AIOS_REMOTE="${AIOS_REMOTE:-https://github.com/nullspector/aios.git}"
     info "Cloning AIOS from ${AIOS_REMOTE}..."
     ${SUDO} mkdir -p "${AIOS_INSTALL_DIR}"
     ${SUDO} chown "${USER}:${USER}" "${AIOS_INSTALL_DIR}" 2>/dev/null || true
@@ -581,7 +581,7 @@ if [[ "${HAS_SYSTEMD}" -eq 1 ]]; then
     ${SUDO} tee "${AIOS_SERVICE_FILE}" > /dev/null <<SERVICE
 [Unit]
 Description=AIOS — AI Developer OS Backend
-Documentation=https://github.com/yourname/aios
+Documentation=https://github.com/nullspector/aios
 After=network.target docker.service
 Wants=docker.service
 
