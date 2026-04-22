@@ -1,0 +1,89 @@
+# =============================================================================
+#  /etc/systemd/system/aios-backend.service
+#  AIOS — AI Developer Operating System  |  Backend Service
+#
+#  Install:
+#    sudo cp aios-backend.service /etc/systemd/system/
+#    sudo systemctl daemon-reload
+#    sudo systemctl enable --now aios-backend
+#
+#  Control:
+#    sudo systemctl start   aios-backend
+#    sudo systemctl stop    aios-backend
+#    sudo systemctl restart aios-backend
+#    sudo systemctl status  aios-backend
+#    journalctl -u aios-backend -f
+# =============================================================================
+
+[Unit]
+Description=AIOS — AI Developer OS Backend (FastAPI + Dashboard)
+Documentation=https://github.com/yourname/aios
+After=network-online.target docker.service
+Wants=network-online.target
+# Optional: only wait for docker if you need containers at startup
+# Wants=docker.service
+
+[Service]
+# ── Identity ──────────────────────────────────────────────────────────────────
+# IMPORTANT: Replace "youruser" with the actual Linux username running AIOS
+# The install.sh sets this automatically. Edit manually if copying this file.
+Type=simple
+User=youruser
+Group=youruser
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+WorkingDirectory=/opt/aios/backend
+
+# ── Environment ───────────────────────────────────────────────────────────────
+Environment="PYTHONPATH=/opt/aios/backend"
+Environment="AIOS_PORT=7860"
+Environment="AIOS_ENV=production"
+# Uncomment to pass GPU visibility into the service process:
+# Environment="CUDA_VISIBLE_DEVICES=all"
+
+# ── Execution ─────────────────────────────────────────────────────────────────
+ExecStart=/opt/aios/venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 \
+    --port 7860 \
+    --workers 1 \
+    --log-level info \
+    --access-log \
+    --use-colors \
+    --no-server-header
+
+# Graceful shutdown — give uvicorn time to finish in-flight requests
+ExecStop=/bin/kill -TERM $MAINPID
+TimeoutStopSec=30
+
+# ── Restart policy ────────────────────────────────────────────────────────────
+Restart=on-failure
+RestartSec=5
+# After 3 failures within 60 seconds, stop retrying
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+# Logs go to journald AND to file (both simultaneously)
+StandardOutput=append:/var/log/aios/backend.log
+StandardError=append:/var/log/aios/backend.log
+
+# ── Security hardening ────────────────────────────────────────────────────────
+# Appropriate for a local developer tool (not a full production server)
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+# System is read-only except for whitelisted paths
+ProtectSystem=strict
+ReadWritePaths=/opt/aios /var/log/aios /home /tmp /run
+
+# Protect kernel from modification
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+
+# Network: only localhost needed for dashboard
+# (Comment out if AIOS ever needs to bind on 0.0.0.0)
+# RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target
